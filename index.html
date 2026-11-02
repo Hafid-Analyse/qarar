@@ -4,20 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>قرار الشراء</title>
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#4338ca">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="قرار الشراء">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f4f1ea; --card:#ffffff; --ink:#1c1917; --muted:#78716c; --line:#e7e2d8;
-  --brand:#0f766e; --brand-soft:#ccfbf1; --ok:#15803d; --wait:#b45309; --no:#b91c1c;
-  --ok-soft:#dcfce7; --wait-soft:#fef3c7; --no-soft:#fee2e2;
+  --bg:#f6f5fb; --card:#ffffff; --ink:#1e1b4b; --muted:#6b6a85; --line:#e4e2f0;
+  --brand:#4338ca; --brand-soft:#e0e7ff; --gold:#f59e0b; --gold-soft:#fef3c7;
+  --ok:#059669; --wait:#d97706; --no:#e11d48;
+  --ok-soft:#d1fae5; --wait-soft:#fef3c7; --no-soft:#ffe4e6;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#12110f; --card:#1c1a17; --ink:#f5f5f4; --muted:#a8a29e; --line:#2e2b27;
-    --brand:#2dd4bf; --brand-soft:#134e4a; --ok:#4ade80; --wait:#fbbf24; --no:#f87171;
-    --ok-soft:#14532d; --wait-soft:#451a03; --no-soft:#450a0a;
+    --bg:#0f0e1f; --card:#1a1832; --ink:#eeedfb; --muted:#a3a1c2; --line:#2c2a4a;
+    --brand:#818cf8; --brand-soft:#2a2766; --gold:#fbbf24; --gold-soft:#3b2a05;
+    --ok:#34d399; --wait:#fbbf24; --no:#fb7185;
+    --ok-soft:#073b2c; --wait-soft:#3b2a05; --no-soft:#4a0d1f;
   }
 }
 *{box-sizing:border-box}
@@ -35,12 +44,34 @@ input{width:100%;font:inherit;font-size:20px;padding:12px 14px;border:1.5px soli
 input:focus{outline:none;border-color:var(--brand)}
 .field{margin-bottom:16px}
 .btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:700;font-size:18px;cursor:pointer;background:var(--brand);color:#fff}
-@media (prefers-color-scheme: dark){.btn{color:#042f2e}}
+@media (prefers-color-scheme: dark){.btn{color:#0f0e1f}}
+.num{unicode-bidi:isolate;direction:ltr;display:inline-block}
 .btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
 .btn:disabled{opacity:.4;cursor:default}
 .row{display:flex;gap:10px}.row .btn{flex:1}
-.progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:8px}
-.progress i{display:block;height:100%;background:var(--brand);width:0;transition:width .25s}
+/* رحلة البوابات */
+.journey{position:relative;display:flex;justify-content:space-between;margin:4px 6px 6px}
+.journey .track,.journey .fill{position:absolute;top:22px;right:22px;left:22px;height:4px;border-radius:4px;background:var(--line)}
+.journey .fill{background:linear-gradient(to left,var(--brand),var(--gold));left:auto;width:0;transition:width .45s cubic-bezier(.3,1.4,.5,1)}
+.node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:48px}
+.node .dot{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:21px;background:var(--card);border:2.5px solid var(--line);filter:grayscale(1);opacity:.55;transition:all .3s}
+.node small{margin-top:4px;font-size:12px;color:var(--muted);font-weight:700}
+.node.done .dot{background:var(--brand);border-color:var(--brand);filter:none;opacity:1}
+.node.done small{color:var(--brand)}
+.node.now .dot{border-color:var(--gold);background:var(--gold-soft);filter:none;opacity:1;transform:scale(1.12);animation:pulse 1.6s infinite}
+.node.now small{color:var(--ink)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}70%{box-shadow:0 0 0 12px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+.steps{display:flex;justify-content:center;gap:6px;margin:12px 0 10px}
+.steps i{width:28px;height:6px;border-radius:6px;background:var(--line);transition:background .3s}
+.steps i.on{background:var(--gold)}
+.steps i.cur{background:var(--brand)}
+.qcard{animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.toast{position:fixed;top:16px;left:50%;transform:translate(-50%,-80px);background:var(--brand);color:#fff;padding:10px 18px;border-radius:30px;font-weight:700;font-size:15px;transition:transform .35s cubic-bezier(.3,1.4,.5,1);z-index:9;white-space:nowrap}
+.toast.on{transform:translate(-50%,0)}
+.edit-badge{background:var(--gold-soft);color:var(--wait);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700;margin-bottom:12px}
+.hist li .acts{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.hist .ed{background:none;border:1px solid var(--line);color:var(--brand);font:inherit;font-size:13px;padding:2px 10px;border-radius:10px;cursor:pointer}
 .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-bottom:12px}
 .gate{display:inline-block;background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px;margin-bottom:10px}
 .q{font-size:21px;font-weight:700;margin:0 0 6px}
@@ -100,6 +131,7 @@ h3{margin:0 0 12px;font-size:17px}
   <section class="screen" id="s-item">
     <div class="income-pill"><span>الدخل الشهري: <b id="incomeShow"></b></span><button class="link" id="editIncome" type="button">تعديل</button></div>
     <div class="card">
+      <div class="edit-badge" id="editBadge" hidden>✏️ تعديل قرار سابق: غيّر الثمن أو الإجابات حسب ظروفك الجديدة</div>
       <div class="field"><label for="itemName">ماذا تريد أن تشتري؟</label><input id="itemName" type="text" placeholder="مثال: هاتف جديد" style="direction:rtl;text-align:right"></div>
       <div class="field"><label for="price">ثمنه (دج)</label><input id="price" type="number" inputmode="numeric" min="0" placeholder="0"></div>
       <button class="btn" id="startQ" type="button">ابدأ الأسئلة</button>
@@ -108,9 +140,16 @@ h3{margin:0 0 12px;font-size:17px}
 
   <!-- 3. الأسئلة -->
   <section class="screen" id="s-q">
-    <div class="progress"><i id="prog"></i></div>
+    <div class="journey" id="journey">
+      <div class="track"></div><div class="fill" id="jFill"></div>
+      <div class="node"><div class="dot">🎯</div><small>الحاجة</small></div>
+      <div class="node"><div class="dot">💰</div><small>القدرة</small></div>
+      <div class="node"><div class="dot">⚖️</div><small>القيمة</small></div>
+      <div class="node"><div class="dot">🧠</div><small>الدافع</small></div>
+    </div>
+    <div class="steps" id="steps"></div>
     <div class="meta"><span id="qCount"></span><span id="qItem"></span></div>
-    <div class="card">
+    <div class="card qcard" id="qCard">
       <span class="gate" id="qGate"></span>
       <p class="q" id="qText"></p>
       <div id="qInfo"></div>
@@ -141,6 +180,7 @@ h3{margin:0 0 12px;font-size:17px}
     </div>
   </section>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 const GATES = [
@@ -182,7 +222,15 @@ let cur = 0;
 let prevScreen = 's-item';
 
 const $ = id => document.getElementById(id);
-const fmt = n => Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+// الأرقام تُعزل باتجاه يسار→يمين حتى لا ينقلب ترتيبها داخل النص العربي
+const iso = s => '<bdi class="num">' + s + '</bdi>';
+const fmt = n => iso(Math.round(n).toLocaleString('en-US'));
+const dec = n => iso((Math.round(n*10)/10).toLocaleString('en-US'));
+const pct = n => iso((Math.round(n*10)/10).toLocaleString('en-US') + '%');
+const ratio = (a,b) => iso(a) + ' من ' + iso(b);
+let editId = null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),1600); }
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); }
 
 function hourly(){ return profile.income / profile.hours; }
@@ -190,8 +238,8 @@ function workHours(){ return item.price / hourly(); }
 function hoursText(){
   const h = workHours();
   if (h < 1) return fmt(h*60) + ' دقيقة';
-  if (h < profile.hours/22*2) return h.toFixed(1).replace('.0','') + ' ساعة';
-  return fmt(h) + ' ساعة (' + (h/(profile.hours/22)).toFixed(1).replace('.0','') + ' يوم عمل)';
+  if (h < profile.hours/22*2) return dec(h) + ' ساعة';
+  return fmt(h) + ' ساعة، أي ' + dec(h/(profile.hours/22)) + ' يوم عمل';
 }
 
 // الدخل
@@ -206,9 +254,14 @@ $('saveIncome').onclick = () => {
   store.set('qarar_profile', profile);
   goItem();
 };
-function goItem(){
-  $('incomeShow').textContent = fmt(profile.income) + ' دج';
-  $('itemName').value = ''; $('price').value = '';
+function goItem(prefill){
+  $('incomeShow').innerHTML = fmt(profile.income) + ' دج';
+  editId = prefill ? prefill.id : null;
+  $('editBadge').hidden = !prefill;
+  $('itemName').value = prefill ? prefill.n : '';
+  $('price').value = prefill ? prefill.p : '';
+  $('startQ').textContent = prefill ? 'راجع الإجابات' : 'ابدأ الأسئلة';
+  item.prev = prefill && prefill.a ? prefill.a : null;
   show('s-item');
 }
 $('editIncome').onclick = initIncome;
@@ -217,23 +270,25 @@ $('editIncome').onclick = initIncome;
 $('startQ').onclick = () => {
   const p = +$('price').value;
   if (!p || p <= 0){ $('price').focus(); return; }
-  item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p};
-  answers = new Array(QS.length).fill(null);
+  const prev = item.prev;
+  item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p, prev};
+  answers = prev ? prev.slice() : new Array(QS.length).fill(null);
   cur = 0; renderQ(); show('s-q');
 };
 
 // الأسئلة
 function renderQ(){
   const q = QS[cur];
-  $('prog').style.width = (cur/QS.length*100) + '%';
-  $('qCount').textContent = 'السؤال ' + (cur+1) + ' من ' + QS.length;
-  $('qItem').textContent = item.name + ' · ' + fmt(item.price) + ' دج';
+  renderJourney(q.g);
+  const card = $('qCard'); card.classList.remove('qcard'); void card.offsetWidth; card.classList.add('qcard');
+  $('qCount').innerHTML = 'السؤال ' + iso(cur+1) + ' من ' + iso(QS.length);
+  $('qItem').innerHTML = esc(item.name) + ' · ' + fmt(item.price) + ' دج';
   $('qGate').textContent = 'بوابة ' + GATES[q.g].name;
   $('qText').textContent = q.t;
   let info = '';
   if (q.info === 'hours'){
     info = '<div class="info">يكلّفك <b>' + hoursText() + '</b> من العمل، أي <b>' +
-      (item.price/profile.income*100).toFixed(1).replace('.0','') + '%</b> من دخلك الشهري.</div>';
+      pct(item.price/profile.income*100) + '</b> من دخلك الشهري.</div>';
   }
   if (q.info === 'use'){
     info = '<div class="info">تكلفة الاستعمال الواحد خلال سنة: أسبوعياً <b>' + fmt(item.price/52) +
@@ -250,7 +305,22 @@ function renderQ(){
   });
   $('backQ').textContent = cur === 0 ? 'رجوع' : 'السابق';
 }
-function next(){ if (cur < QS.length-1){ cur++; renderQ(); } else result(); }
+function renderJourney(g){
+  document.querySelectorAll('#journey .node').forEach((n,i) => {
+    n.classList.toggle('done', i < g); n.classList.toggle('now', i === g);
+  });
+  $('jFill').style.width = 'calc((100% - 44px) * ' + (g/3) + ')';
+  const inGate = QS.map((q,i)=>i).filter(i => QS[i].g === g);
+  $('steps').innerHTML = inGate.map(i => '<i class="' + (i === cur ? 'cur' : (answers[i] !== null && i < cur ? 'on' : '')) + '"></i>').join('');
+}
+const CHEERS = ['🎯 اجتزت بوابة الحاجة','💰 اجتزت بوابة القدرة','⚖️ اجتزت بوابة القيمة'];
+function next(){
+  if (cur < QS.length-1){
+    const before = QS[cur].g; cur++;
+    if (QS[cur].g !== before) toast(CHEERS[before]);
+    renderQ();
+  } else result();
+}
 $('backQ').onclick = () => { if (cur === 0) show('s-item'); else { cur--; renderQ(); } };
 
 // النتيجة
@@ -268,13 +338,13 @@ function result(){
 
   $('verdict').className = 'verdict ' + v.c;
   $('verdict').innerHTML = '<div class="ic">' + v.ic + '</div><h2>' + v.t + '</h2>' +
-    '<div class="score">' + item.name + ' · ' + total + ' / 100</div>' +
+    '<div class="score">' + esc(item.name) + ' · ' + ratio(total, 100) + '</div>' +
     (knock ? '<p class="reason" style="margin:10px 0 0">⛔ ' + knock + '</p>' : '');
 
   const use = ans('use');
   $('facts').innerHTML =
     '<div><b>' + hoursText() + '</b><small>من العمل</small></div>' +
-    '<div><b>' + (item.price/profile.income*100).toFixed(1).replace('.0','') + '%</b><small>من الدخل الشهري</small></div>' +
+    '<div><b>' + pct(item.price/profile.income*100) + '</b><small>من الدخل الشهري</small></div>' +
     '<div><b>' + fmt(item.price/use[3]) + ' دج</b><small>للاستعمال الواحد</small></div>';
 
   let weakest = 0, weakRatio = 2;
@@ -282,7 +352,7 @@ function result(){
     const r = gs[i]/g.max;
     if (r < weakRatio){ weakRatio = r; weakest = i; }
     const col = r >= .75 ? 'var(--ok)' : r >= .5 ? 'var(--wait)' : 'var(--no)';
-    return '<div class="g-row"><div class="top"><span>' + g.name + '</span><b>' + gs[i] + ' / ' + g.max +
+    return '<div class="g-row"><div class="top"><span>' + g.name + '</span><b>' + ratio(gs[i], g.max) +
       '</b></div><div class="bar"><i style="width:' + (r*100) + '%;background:' + col + '"></i></div></div>';
   }).join('');
   $('tip').textContent = (v.k === 'ok' && weakRatio >= .75)
@@ -290,12 +360,16 @@ function result(){
     : TIPS[weakest];
 
   const hist = store.get('qarar_hist', []);
-  hist.unshift({n:item.name, p:item.price, s:total, k:v.k, d:new Date().toISOString().slice(0,10)});
+  const rec = {id: editId || Date.now(), n:item.name, p:item.price, s:total, k:v.k, a:answers.slice(), d:new Date().toISOString().slice(0,10)};
+  const at = editId ? hist.findIndex(h => h.id === editId) : -1;
+  if (at >= 0){ rec.e = 1; hist.splice(at, 1); }
+  hist.unshift(rec);
+  if (at >= 0) setTimeout(() => toast('✏️ تم تحديث القرار'), 300);
+  editId = null;
   store.set('qarar_hist', hist.slice(0,50));
-  $('prog').style.width = '100%';
   show('s-res');
 }
-$('again').onclick = goItem;
+$('again').onclick = () => goItem();
 
 // السجل
 const TAGS = {ok:['اشترِ','v-ok'], wait:['أجّل','v-wait'], no:['لا تشترِ','v-no']};
@@ -303,22 +377,33 @@ $('histBtn').onclick = () => {
   const cur = document.querySelector('.screen.on');
   if (cur && cur.id !== 's-hist') prevScreen = cur.id;
   const hist = store.get('qarar_hist', []);
+  let fixed = false;
+  hist.forEach((h,i) => { if (!h.id){ h.id = Date.now() - i - 1; fixed = true; } });
+  if (fixed) store.set('qarar_hist', hist);
   $('histList').innerHTML = hist.length ? hist.map(h => {
     let extra = '';
     if (h.k === 'wait'){
       const days = 30 - Math.floor((Date.now() - new Date(h.d)) / 864e5);
-      extra = days > 0 ? ' · بقي ' + days + ' يوماً' : ' · حان وقت المراجعة';
+      extra = days > 0 ? ' · بقي ' + iso(days) + ' يوماً' : ' · حان وقت المراجعة';
     }
-    return '<li><span><b>' + h.n.replace(/</g,'&lt;') + '</b><br><small style="color:var(--muted)">' + fmt(h.p) + ' دج · ' + h.d + extra +
-      '</small></span><span class="tag ' + TAGS[h.k][1] + '">' + TAGS[h.k][0] + ' ' + h.s + '</span></li>';
+    return '<li><span><b>' + esc(h.n) + '</b>' + (h.e ? ' <small style="color:var(--muted)">(معدّل)</small>' : '') +
+      '<br><small style="color:var(--muted)">' + fmt(h.p) + ' دج · ' + iso(h.d) + extra +
+      '</small></span><span class="acts"><span class="tag ' + TAGS[h.k][1] + '">' + TAGS[h.k][0] + ' ' + iso(h.s) +
+      '</span><button class="ed" type="button" data-id="' + h.id + '">✏️ تعديل</button></span></li>';
   }).join('') : '<p class="empty">لا توجد قرارات بعد.</p>';
   show('s-hist');
+};
+$('histList').onclick = e => {
+  const b = e.target.closest('.ed'); if (!b) return;
+  const h = store.get('qarar_hist', []).find(x => String(x.id) === b.dataset.id);
+  if (h) goItem(h);
 };
 $('closeHist').onclick = () => show(profile ? prevScreen : 's-income');
 $('clearHist').onclick = () => { if (confirm('مسح كل السجل؟')){ store.set('qarar_hist', []); $('histBtn').onclick(); } };
 
 // البداية
 if (profile) goItem(); else initIncome();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
