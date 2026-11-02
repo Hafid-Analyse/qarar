@@ -81,6 +81,9 @@ input:focus{outline:none;border-color:var(--brand)}
 .opt{text-align:right;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:border-color .15s,background .15s}
 .opt:hover{border-color:var(--brand)}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.resale .field{margin:4px 0 12px}
+.resale .live{font-size:15px;color:var(--muted);margin:0 0 14px;min-height:24px}
+.resale .row{flex-direction:column}
 .opt .cost{color:var(--brand);font-weight:700;font-size:15px}
 .opt.sel{border-color:var(--brand);background:var(--brand-soft);font-weight:700}
 .verdict{text-align:center;border-radius:18px;padding:24px 16px;margin-bottom:14px}
@@ -94,7 +97,7 @@ input:focus{outline:none;border-color:var(--brand)}
 .g-row .top{display:flex;justify-content:space-between;font-size:15px;margin-bottom:4px}
 .bar{height:8px;background:var(--line);border-radius:8px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:8px}
-.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;text-align:center}
 .facts div{background:var(--bg);border-radius:12px;padding:10px 4px}
 .facts b{display:block;font-size:18px}
 .facts small{color:var(--muted);font-size:12px}
@@ -147,6 +150,7 @@ h3{margin:0 0 12px;font-size:17px}
       <div class="node"><div class="dot">🎯</div><small>الحاجة</small></div>
       <div class="node"><div class="dot">💰</div><small>القدرة</small></div>
       <div class="node"><div class="dot">⚖️</div><small>القيمة</small></div>
+      <div class="node"><div class="dot">💎</div><small>العائد</small></div>
       <div class="node"><div class="dot">🧠</div><small>الدافع</small></div>
     </div>
     <div class="steps" id="steps"></div>
@@ -186,32 +190,37 @@ h3{margin:0 0 12px;font-size:17px}
 
 <script>
 const GATES = [
-  {name:'الحاجة', max:30},
-  {name:'القدرة', max:30},
-  {name:'القيمة', max:25},
+  {name:'الحاجة', max:25},
+  {name:'القدرة', max:25},
+  {name:'القيمة', max:20},
+  {name:'العائد', max:15},
   {name:'الدافع', max:15}
 ];
 const TIPS = [
   'الحاجة ضعيفة: اسأل نفسك هل يحل مشكلة حقيقية، أم يمكنك الإصلاح أو الاستعارة أو الاستئجار؟',
   'القدرة ضعيفة: خطّط له في ميزانية الشهر القادم وادّخر ثمنه أولاً بدل اقتطاعه من بند آخر.',
   'القيمة ضعيفة: قارن بين 3 محلات وفكّر في المستعمل، واحسب التكاليف الخفية قبل القرار.',
+  'العائد ضعيف: هذا مال يخرج ولا يعود. ابحث عن بديل يحفظ قيمته أو يسهل بيعه لاحقاً (المستعمل الجيد، علامة معروفة).',
   'الدافع ضعيف: انتظر 72 ساعة. إذا كان الدافع تخفيضاً أو مزاجاً فغالباً ستخفّ الرغبة.'
 ];
-// gate index, question, options [label, points]; knock=true => "لا تشترِ" فوراً
+// gate index, question, options [label, points, knock, factor]; knock=true => "لا تشترِ" فوراً
 const QS = [
   {g:0, id:'need',   t:'هل يحل مشكلة حقيقية أعيشها الآن؟', o:[['نعم',10],['نوعاً ما',5],['لا',0]]},
-  {g:0, id:'search', t:'لو لم أره اليوم، هل كنت سأبحث عنه؟', o:[['نعم',10],['لا',0]]},
-  {g:0, t:'هل أملك شيئاً يؤدي نفس الغرض؟', o:[['لا',10],['بديل جزئي',5],['نعم',0]]},
+  {g:0, id:'search', t:'لو لم أره اليوم، هل كنت سأبحث عنه؟', o:[['نعم',8],['لا',0]]},
+  {g:0, t:'هل أملك شيئاً يؤدي نفس الغرض؟', o:[['لا',7],['بديل جزئي',3],['نعم',0]]},
   {g:1, id:'cash',   t:'هل أدفع ثمنه نقداً دون أن أمس الادخار أو أستدين؟', o:[['نعم',10],['لا',0,true]]},
-  {g:1, t:'هل يستحق ساعات العمل التي يكلّفها؟', info:'hours', o:[['نعم',10],['متردد',5],['لا',0]]},
-  {g:1, t:'هل هو مخطط له في ميزانية هذا الشهر؟', o:[['نعم',10],['سأقتطعه من بند آخر',5],['لا',0]]},
-  {g:2, id:'use',    t:'كم مرة سأستعمله؟', o:[['يومياً',10,false,365],['أسبوعياً',10,false,52],['شهرياً',5,false,12],['نادراً',0,false,2]]},
+  {g:1, t:'هل يستحق ساعات العمل التي يكلّفها؟', info:'hours', o:[['نعم',8],['متردد',4],['لا',0]]},
+  {g:1, t:'هل هو مخطط له في ميزانية هذا الشهر؟', o:[['نعم',7],['سأقتطعه من بند آخر',3],['لا',0]]},
+  {g:2, id:'use',    t:'كم مرة سأستعمله؟', o:[['يومياً',8,false,365],['أسبوعياً',8,false,52],['شهرياً',4,false,12],['نادراً',0,false,2]]},
   {g:2, id:'life',   t:'كم سنة تتوقع أن تستعمله؟', info:'use', o:[['أقل من سنة',0,false,0.5],['سنة',0,false,1],['3 سنوات',0,false,3],['5 سنوات أو أكثر',0,false,5]]},
-  {g:2, t:'هل له تكاليف خفية (صيانة، اشتراك، وقود، قطع غيار)؟', o:[['لا أو قليلة',8],['متوسطة',4],['كبيرة',0]]},
-  {g:2, t:'هل قارنت الأسعار والبدائل (محلات أخرى، المستعمل)؟', o:[['نعم',7],['لا',0]]},
-  {g:3, t:'ما دافعي للشراء الآن؟', o:[['حاجة فعلية',5],['تخفيض أو عرض',0],['تأثير الآخرين',0],['مزاج (ملل، حزن، مكافأة)',0]]},
-  {g:3, t:'هل سأظل راضياً عنه بعد شهر؟', o:[['نعم',5],['لست متأكداً',2],['لا',0]]},
-  {g:3, t:'انتظرت 72 ساعة وما زلت أريده؟', o:[['نعم',5],['لم أنتظر بعد',2],['خفّت الرغبة',0]]}
+  {g:2, t:'هل له تكاليف خفية (صيانة، اشتراك، وقود، قطع غيار)؟', o:[['لا أو قليلة',6],['متوسطة',3],['كبيرة',0]]},
+  {g:2, t:'هل قارنت الأسعار والبدائل (محلات أخرى، المستعمل)؟', o:[['نعم',6],['لا',0]]},
+  {g:3, id:'nature', t:'ما طبيعة هذا الشراء؟', o:[['أصل يدرّ دخلاً (أداة عمل، للكراء)',6],['يحفظ قيمته (ذهب، أرض)',5],['تنقص قيمته مع الوقت (هاتف، سيارة، أثاث)',2],['يُستهلك فوراً (أكل، خدمة، رحلة)',0]]},
+  {g:3, t:'لمن نفعه؟', o:[['للأسرة كلها',4],['فيه نفع لغيري (هدية، صدقة، صلة رحم)',4],['لي وحدي',2]]},
+  {g:3, id:'resale', type:'resale', t:'بكم تبيعه لاحقاً كأقل تقدير؟'},
+  {g:4, t:'ما دافعي للشراء الآن؟', o:[['حاجة فعلية',5],['تخفيض أو عرض',0],['تأثير الآخرين',0],['مزاج (ملل، حزن، مكافأة)',0]]},
+  {g:4, t:'هل سأظل راضياً عنه بعد شهر؟', o:[['نعم',5],['لست متأكداً',2],['لا',0]]},
+  {g:4, t:'انتظرت 72 ساعة وما زلت أريده؟', o:[['نعم',5],['لم أنتظر بعد',2],['خفّت الرغبة',0]]}
 ];
 
 const store = {
@@ -282,10 +291,40 @@ $('startQ').onclick = () => {
 // الأسئلة
 const useIdx = QS.findIndex(q => q.id === 'use');
 // قرارات قديمة (12 سؤالاً): سؤال المدة لم يكن موجوداً، وخيار "أسبوعياً" كان الأول
+// قرارات 13 سؤالاً: أسئلة بوابة العائد الثلاثة لم تكن موجودة
+const natIdx = QS.findIndex(q => q.id === 'nature');
+const resIdx = QS.findIndex(q => q.id === 'resale');
 function migrate(a){
   a = a.slice();
   if (a.length === 12){ if (a[useIdx] !== null) a[useIdx] += 1; a.splice(useIdx + 1, 0, null); }
+  if (a.length === 13){ a.splice(natIdx, 0, null, null, null); }
   return a;
+}
+// تكلفة كل إجابة: سؤال سعر البيع تُحسب نقاطه من نسبة البيع إلى الثمن
+function points(i){
+  const q = QS[i], a = answers[i];
+  if (q.type === 'resale'){ const r = (a && a.v || 0) / item.price; return r >= .5 ? 5 : r >= .2 ? 3 : 0; }
+  return q.o[a][1];
+}
+const resaleVal = () => (answers[resIdx] && answers[resIdx].v) || 0;
+const skipped = i => QS[i].type === 'resale' && answers[natIdx] === 3;
+function renderResale(){
+  const box = $('qOpts');
+  const v = answers[cur] && answers[cur].v ? answers[cur].v : '';
+  box.innerHTML = '<div class="resale"><div class="field"><input id="resaleIn" type="number" inputmode="numeric" min="0" placeholder="0" value="' + v + '"></div>' +
+    '<p class="live" id="resaleLive"></p><div class="row" style="flex-direction:column;gap:10px">' +
+    '<button class="btn" id="resaleOk" type="button">متابعة</button>' +
+    '<button class="btn ghost" id="resaleNo" type="button">لا يُباع / صعب بيعه</button></div></div>';
+  const inp = $('resaleIn');
+  const live = () => {
+    const n = +inp.value || 0;
+    $('resaleLive').innerHTML = n > 0
+      ? 'تسترجع ' + pct(Math.min(n / item.price, 1) * 100) + ' من ثمنه، فتكلفته الحقيقية ' + fmt(Math.max(item.price - n, 0)) + ' دج'
+      : 'اكتب أقل ثمن تتوقع أن يشتريه به أحد منك.';
+  };
+  inp.oninput = live; live();
+  $('resaleOk').onclick = () => { answers[cur] = {v: Math.max(+inp.value || 0, 0)}; next(); };
+  $('resaleNo').onclick = () => { answers[cur] = {v: 0}; next(); };
 }
 function renderQ(){
   const q = QS[cur];
@@ -305,6 +344,8 @@ function renderQ(){
     info = '<div class="info">تستعمله <b>' + u[0] + '</b>. بجانب كل مدة: تكلفة الاستعمال الواحد.</div>';
   }
   $('qInfo').innerHTML = info;
+  $('backQ').textContent = cur === 0 ? 'رجوع' : 'السابق';
+  if (q.type === 'resale'){ renderResale(); return; }
   const box = $('qOpts'); box.innerHTML = '';
   q.o.forEach((o,i) => {
     const b = document.createElement('button');
@@ -322,24 +363,29 @@ function renderJourney(g){
   document.querySelectorAll('#journey .node').forEach((n,i) => {
     n.classList.toggle('done', i < g); n.classList.toggle('now', i === g);
   });
-  $('jFill').style.width = 'calc((100% - 44px) * ' + (g/3) + ')';
+  $('jFill').style.width = 'calc((100% - 44px) * ' + (g/(GATES.length-1)) + ')';
   const inGate = QS.map((q,i)=>i).filter(i => QS[i].g === g);
   $('steps').innerHTML = inGate.map(i => '<i class="' + (i === cur ? 'cur' : (answers[i] !== null && i < cur ? 'on' : '')) + '"></i>').join('');
 }
-const CHEERS = ['🎯 اجتزت بوابة الحاجة','💰 اجتزت بوابة القدرة','⚖️ اجتزت بوابة القيمة'];
+const CHEERS = ['🎯 اجتزت بوابة الحاجة','💰 اجتزت بوابة القدرة','⚖️ اجتزت بوابة القيمة','💎 اجتزت بوابة العائد'];
 function next(){
-  if (cur < QS.length-1){
-    const before = QS[cur].g; cur++;
-    if (QS[cur].g !== before) toast(CHEERS[before]);
-    renderQ();
-  } else result();
+  const before = QS[cur].g;
+  cur++;
+  while (cur < QS.length && skipped(cur)){ answers[cur] = {v: 0}; cur++; }
+  if (cur >= QS.length){ cur = QS.length - 1; result(); return; }
+  if (QS[cur].g !== before) toast(CHEERS[before]);
+  renderQ();
 }
-$('backQ').onclick = () => { if (cur === 0) show('s-item'); else { cur--; renderQ(); } };
+$('backQ').onclick = () => {
+  if (cur === 0){ show('s-item'); return; }
+  cur--; while (cur > 0 && skipped(cur)) cur--;
+  renderQ();
+};
 
 // النتيجة
 function result(){
-  const gs = [0,0,0,0]; let total = 0, knock = '';
-  QS.forEach((q,i) => { const o = q.o[answers[i]]; gs[q.g] += o[1]; total += o[1]; });
+  const gs = GATES.map(() => 0); let total = 0, knock = '';
+  QS.forEach((q,i) => { const pt = points(i); gs[q.g] += pt; total += pt; });
   const ans = id => { const i = QS.findIndex(q=>q.id===id); return QS[i].o[answers[i]]; };
   if (ans('cash')[2]) knock = 'لا تستطيع دفعه نقداً دون مس الادخار أو الاستدانة.';
   else if (ans('need')[1] === 0 && ans('search')[1] === 0) knock = 'لا يحل مشكلة حقيقية ولم تكن تبحث عنه.';
@@ -355,10 +401,12 @@ function result(){
     (knock ? '<p class="reason" style="margin:10px 0 0">⛔ ' + knock + '</p>' : '');
 
   const uses = ans('use')[3] * ans('life')[3];
+  const net = Math.max(item.price - resaleVal(), 0);
   $('facts').innerHTML =
     '<div><b>' + hoursText() + '</b><small>من العمل</small></div>' +
     '<div><b>' + pct(item.price/profile.income*100) + '</b><small>من الدخل الشهري</small></div>' +
-    '<div><b>' + fmt(item.price/uses) + ' دج</b><small>للاستعمال الواحد</small></div>';
+    '<div><b>' + fmt(net) + ' دج</b><small>التكلفة الحقيقية (الثمن − سعر البيع)</small></div>' +
+    '<div><b>' + fmt(net/uses) + ' دج</b><small>للاستعمال الواحد</small></div>';
 
   let weakest = 0, weakRatio = 2;
   $('gates').innerHTML = GATES.map((g,i) => {
