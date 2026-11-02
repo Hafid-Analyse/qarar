@@ -80,6 +80,8 @@ input:focus{outline:none;border-color:var(--brand)}
 .opts{display:grid;gap:10px}
 .opt{text-align:right;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:border-color .15s,background .15s}
 .opt:hover{border-color:var(--brand)}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.opt .cost{color:var(--brand);font-weight:700;font-size:15px}
 .opt.sel{border-color:var(--brand);background:var(--brand-soft);font-weight:700}
 .verdict{text-align:center;border-radius:18px;padding:24px 16px;margin-bottom:14px}
 .verdict .ic{font-size:44px;line-height:1}
@@ -203,7 +205,8 @@ const QS = [
   {g:1, id:'cash',   t:'هل أدفع ثمنه نقداً دون أن أمس الادخار أو أستدين؟', o:[['نعم',10],['لا',0,true]]},
   {g:1, t:'هل يستحق ساعات العمل التي يكلّفها؟', info:'hours', o:[['نعم',10],['متردد',5],['لا',0]]},
   {g:1, t:'هل هو مخطط له في ميزانية هذا الشهر؟', o:[['نعم',10],['سأقتطعه من بند آخر',5],['لا',0]]},
-  {g:2, id:'use',    t:'كم مرة سأستعمله؟', info:'use', o:[['أسبوعياً أو أكثر',10,false,52],['شهرياً',5,false,12],['نادراً',0,false,2]]},
+  {g:2, id:'use',    t:'كم مرة سأستعمله؟', o:[['يومياً',10,false,365],['أسبوعياً',10,false,52],['شهرياً',5,false,12],['نادراً',0,false,2]]},
+  {g:2, id:'life',   t:'كم سنة تتوقع أن تستعمله؟', info:'use', o:[['أقل من سنة',0,false,0.5],['سنة',0,false,1],['3 سنوات',0,false,3],['5 سنوات أو أكثر',0,false,5]]},
   {g:2, t:'هل له تكاليف خفية (صيانة، اشتراك، وقود، قطع غيار)؟', o:[['لا أو قليلة',8],['متوسطة',4],['كبيرة',0]]},
   {g:2, t:'هل قارنت الأسعار والبدائل (محلات أخرى، المستعمل)؟', o:[['نعم',7],['لا',0]]},
   {g:3, t:'ما دافعي للشراء الآن؟', o:[['حاجة فعلية',5],['تخفيض أو عرض',0],['تأثير الآخرين',0],['مزاج (ملل، حزن، مكافأة)',0]]},
@@ -272,11 +275,18 @@ $('startQ').onclick = () => {
   if (!p || p <= 0){ $('price').focus(); return; }
   const prev = item.prev;
   item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p, prev};
-  answers = prev ? prev.slice() : new Array(QS.length).fill(null);
+  answers = prev ? migrate(prev) : new Array(QS.length).fill(null);
   cur = 0; renderQ(); show('s-q');
 };
 
 // الأسئلة
+const useIdx = QS.findIndex(q => q.id === 'use');
+// قرارات قديمة (12 سؤالاً): سؤال المدة لم يكن موجوداً، وخيار "أسبوعياً" كان الأول
+function migrate(a){
+  a = a.slice();
+  if (a.length === 12){ if (a[useIdx] !== null) a[useIdx] += 1; a.splice(useIdx + 1, 0, null); }
+  return a;
+}
 function renderQ(){
   const q = QS[cur];
   renderJourney(q.g);
@@ -291,15 +301,18 @@ function renderQ(){
       pct(item.price/profile.income*100) + '</b> من دخلك الشهري.</div>';
   }
   if (q.info === 'use'){
-    info = '<div class="info">تكلفة الاستعمال الواحد خلال سنة: أسبوعياً <b>' + fmt(item.price/52) +
-      ' دج</b> · شهرياً <b>' + fmt(item.price/12) + ' دج</b> · نادراً <b>' + fmt(item.price/2) + ' دج</b></div>';
+    const u = QS[useIdx].o[answers[useIdx]];
+    info = '<div class="info">تستعمله <b>' + u[0] + '</b>. بجانب كل مدة: تكلفة الاستعمال الواحد.</div>';
   }
   $('qInfo').innerHTML = info;
   const box = $('qOpts'); box.innerHTML = '';
   q.o.forEach((o,i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'opt' + (answers[cur]===i ? ' sel' : '');
-    b.textContent = o[0];
+    if (q.info === 'use'){
+      const u = QS[useIdx].o[answers[useIdx]];
+      b.innerHTML = o[0] + '<span class="cost">' + fmt(item.price/(u[3]*o[3])) + ' دج</span>';
+    } else b.textContent = o[0];
     b.onclick = () => { answers[cur] = i; b.classList.add('sel'); setTimeout(next, 180); };
     box.appendChild(b);
   });
@@ -341,11 +354,11 @@ function result(){
     '<div class="score">' + esc(item.name) + ' · ' + ratio(total, 100) + '</div>' +
     (knock ? '<p class="reason" style="margin:10px 0 0">⛔ ' + knock + '</p>' : '');
 
-  const use = ans('use');
+  const uses = ans('use')[3] * ans('life')[3];
   $('facts').innerHTML =
     '<div><b>' + hoursText() + '</b><small>من العمل</small></div>' +
     '<div><b>' + pct(item.price/profile.income*100) + '</b><small>من الدخل الشهري</small></div>' +
-    '<div><b>' + fmt(item.price/use[3]) + ' دج</b><small>للاستعمال الواحد</small></div>';
+    '<div><b>' + fmt(item.price/uses) + ' دج</b><small>للاستعمال الواحد</small></div>';
 
   let weakest = 0, weakRatio = 2;
   $('gates').innerHTML = GATES.map((g,i) => {
