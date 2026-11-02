@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قرار الشراء</title>
+<meta name="theme-color" content="#0f766e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea; --card:#ffffff; --ink:#1c1917; --muted:#78716c; --line:#e7e2d8;
+  --brand:#0f766e; --brand-soft:#ccfbf1; --ok:#15803d; --wait:#b45309; --no:#b91c1c;
+  --ok-soft:#dcfce7; --wait-soft:#fef3c7; --no-soft:#fee2e2;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#12110f; --card:#1c1a17; --ink:#f5f5f4; --muted:#a8a29e; --line:#2e2b27;
+    --brand:#2dd4bf; --brand-soft:#134e4a; --ok:#4ade80; --wait:#fbbf24; --no:#f87171;
+    --ok-soft:#14532d; --wait-soft:#451a03; --no-soft:#450a0a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Tajawal',system-ui,sans-serif;font-size:17px;line-height:1.6}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:24px;font-weight:800;margin:0}
+h1 span{color:var(--brand)}
+.link{background:none;border:0;color:var(--brand);font:inherit;font-size:15px;cursor:pointer;padding:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 18px;margin-bottom:14px}
+.screen{display:none}.screen.on{display:block}
+label{display:block;font-weight:700;margin-bottom:6px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+input{width:100%;font:inherit;font-size:20px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);direction:ltr;text-align:right}
+input:focus{outline:none;border-color:var(--brand)}
+.field{margin-bottom:16px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:700;font-size:18px;cursor:pointer;background:var(--brand);color:#fff}
+@media (prefers-color-scheme: dark){.btn{color:#042f2e}}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:10px}.row .btn{flex:1}
+.progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:8px}
+.progress i{display:block;height:100%;background:var(--brand);width:0;transition:width .25s}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-bottom:12px}
+.gate{display:inline-block;background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.q{font-size:21px;font-weight:700;margin:0 0 6px}
+.info{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:15px;margin:10px 0 14px}
+.info b{color:var(--brand)}
+.opts{display:grid;gap:10px}
+.opt{text-align:right;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--brand)}
+.opt.sel{border-color:var(--brand);background:var(--brand-soft);font-weight:700}
+.verdict{text-align:center;border-radius:18px;padding:24px 16px;margin-bottom:14px}
+.verdict .ic{font-size:44px;line-height:1}
+.verdict h2{margin:8px 0 2px;font-size:26px}
+.verdict .score{font-size:16px;opacity:.85}
+.v-ok{background:var(--ok-soft);color:var(--ok)}
+.v-wait{background:var(--wait-soft);color:var(--wait)}
+.v-no{background:var(--no-soft);color:var(--no)}
+.gates{display:grid;gap:12px}
+.g-row .top{display:flex;justify-content:space-between;font-size:15px;margin-bottom:4px}
+.bar{height:8px;background:var(--line);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:8px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.facts div{background:var(--bg);border-radius:12px;padding:10px 4px}
+.facts b{display:block;font-size:18px}
+.facts small{color:var(--muted);font-size:12px}
+.tip{border-right:4px solid var(--brand);padding:4px 12px;margin:0}
+.reason{color:var(--no);font-weight:700}
+h3{margin:0 0 12px;font-size:17px}
+.hist{list-style:none;padding:0;margin:0}
+.hist li{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.hist li:last-child{border:0}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+.empty{color:var(--muted);font-size:15px;text-align:center;margin:0}
+.income-pill{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛒 قرار <span>الشراء</span></h1>
+    <button class="link" id="histBtn" type="button">السجل</button>
+  </header>
+
+  <!-- 1. الدخل -->
+  <section class="screen" id="s-income">
+    <div class="card">
+      <label for="income">دخلك الشهري (دج)</label>
+      <p class="hint">يُحفظ على هاتفك فقط، ولا يُرسل إلى أي مكان. تُدخله مرة واحدة.</p>
+      <div class="field"><input id="income" type="number" inputmode="numeric" min="0" placeholder="مثال: 60000"></div>
+      <label for="hours">ساعات العمل في الشهر</label>
+      <p class="hint">إذا لم تعرف، اتركها 176 (8 ساعات × 22 يوماً).</p>
+      <div class="field"><input id="hours" type="number" inputmode="numeric" min="1" value="176"></div>
+      <button class="btn" id="saveIncome" type="button">حفظ والمتابعة</button>
+    </div>
+  </section>
+
+  <!-- 2. المنتج -->
+  <section class="screen" id="s-item">
+    <div class="income-pill"><span>الدخل الشهري: <b id="incomeShow"></b></span><button class="link" id="editIncome" type="button">تعديل</button></div>
+    <div class="card">
+      <div class="field"><label for="itemName">ماذا تريد أن تشتري؟</label><input id="itemName" type="text" placeholder="مثال: هاتف جديد" style="direction:rtl;text-align:right"></div>
+      <div class="field"><label for="price">ثمنه (دج)</label><input id="price" type="number" inputmode="numeric" min="0" placeholder="0"></div>
+      <button class="btn" id="startQ" type="button">ابدأ الأسئلة</button>
+    </div>
+  </section>
+
+  <!-- 3. الأسئلة -->
+  <section class="screen" id="s-q">
+    <div class="progress"><i id="prog"></i></div>
+    <div class="meta"><span id="qCount"></span><span id="qItem"></span></div>
+    <div class="card">
+      <span class="gate" id="qGate"></span>
+      <p class="q" id="qText"></p>
+      <div id="qInfo"></div>
+      <div class="opts" id="qOpts"></div>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="backQ" type="button">السابق</button>
+    </div>
+  </section>
+
+  <!-- 4. النتيجة -->
+  <section class="screen" id="s-res">
+    <div class="verdict" id="verdict"></div>
+    <div class="card"><h3>الأرقام</h3><div class="facts" id="facts"></div></div>
+    <div class="card"><h3>البوابات</h3><div class="gates" id="gates"></div></div>
+    <div class="card"><h3>نصيحة</h3><p class="tip" id="tip"></p></div>
+    <div class="row">
+      <button class="btn" id="again" type="button">قرار جديد</button>
+    </div>
+  </section>
+
+  <!-- 5. السجل -->
+  <section class="screen" id="s-hist">
+    <div class="card"><h3>قراراتك السابقة</h3><ul class="hist" id="histList"></ul></div>
+    <div class="row">
+      <button class="btn ghost" id="closeHist" type="button">رجوع</button>
+      <button class="btn ghost" id="clearHist" type="button">مسح السجل</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const GATES = [
+  {name:'الحاجة', max:30},
+  {name:'القدرة', max:30},
+  {name:'القيمة', max:25},
+  {name:'الدافع', max:15}
+];
+const TIPS = [
+  'الحاجة ضعيفة: اسأل نفسك هل يحل مشكلة حقيقية، أم يمكنك الإصلاح أو الاستعارة أو الاستئجار؟',
+  'القدرة ضعيفة: خطّط له في ميزانية الشهر القادم وادّخر ثمنه أولاً بدل اقتطاعه من بند آخر.',
+  'القيمة ضعيفة: قارن بين 3 محلات وفكّر في المستعمل، واحسب التكاليف الخفية قبل القرار.',
+  'الدافع ضعيف: انتظر 72 ساعة. إذا كان الدافع تخفيضاً أو مزاجاً فغالباً ستخفّ الرغبة.'
+];
+// gate index, question, options [label, points]; knock=true => "لا تشترِ" فوراً
+const QS = [
+  {g:0, id:'need',   t:'هل يحل مشكلة حقيقية أعيشها الآن؟', o:[['نعم',10],['نوعاً ما',5],['لا',0]]},
+  {g:0, id:'search', t:'لو لم أره اليوم، هل كنت سأبحث عنه؟', o:[['نعم',10],['لا',0]]},
+  {g:0, t:'هل أملك شيئاً يؤدي نفس الغرض؟', o:[['لا',10],['بديل جزئي',5],['نعم',0]]},
+  {g:1, id:'cash',   t:'هل أدفع ثمنه نقداً دون أن أمس الادخار أو أستدين؟', o:[['نعم',10],['لا',0,true]]},
+  {g:1, t:'هل يستحق ساعات العمل التي يكلّفها؟', info:'hours', o:[['نعم',10],['متردد',5],['لا',0]]},
+  {g:1, t:'هل هو مخطط له في ميزانية هذا الشهر؟', o:[['نعم',10],['سأقتطعه من بند آخر',5],['لا',0]]},
+  {g:2, id:'use',    t:'كم مرة سأستعمله؟', info:'use', o:[['أسبوعياً أو أكثر',10,false,52],['شهرياً',5,false,12],['نادراً',0,false,2]]},
+  {g:2, t:'هل له تكاليف خفية (صيانة، اشتراك، وقود، قطع غيار)؟', o:[['لا أو قليلة',8],['متوسطة',4],['كبيرة',0]]},
+  {g:2, t:'هل قارنت الأسعار والبدائل (محلات أخرى، المستعمل)؟', o:[['نعم',7],['لا',0]]},
+  {g:3, t:'ما دافعي للشراء الآن؟', o:[['حاجة فعلية',5],['تخفيض أو عرض',0],['تأثير الآخرين',0],['مزاج (ملل، حزن، مكافأة)',0]]},
+  {g:3, t:'هل سأظل راضياً عنه بعد شهر؟', o:[['نعم',5],['لست متأكداً',2],['لا',0]]},
+  {g:3, t:'انتظرت 72 ساعة وما زلت أريده؟', o:[['نعم',5],['لم أنتظر بعد',2],['خفّت الرغبة',0]]}
+];
+
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+let profile = store.get('qarar_profile', null);
+let item = {name:'', price:0};
+let answers = [];
+let cur = 0;
+let prevScreen = 's-item';
+
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); }
+
+function hourly(){ return profile.income / profile.hours; }
+function workHours(){ return item.price / hourly(); }
+function hoursText(){
+  const h = workHours();
+  if (h < 1) return fmt(h*60) + ' دقيقة';
+  if (h < profile.hours/22*2) return h.toFixed(1).replace('.0','') + ' ساعة';
+  return fmt(h) + ' ساعة (' + (h/(profile.hours/22)).toFixed(1).replace('.0','') + ' يوم عمل)';
+}
+
+// الدخل
+function initIncome(){
+  if (profile){ $('income').value = profile.income; $('hours').value = profile.hours; }
+  show('s-income');
+}
+$('saveIncome').onclick = () => {
+  const inc = +$('income').value, hrs = +$('hours').value || 176;
+  if (!inc || inc <= 0){ $('income').focus(); return; }
+  profile = {income:inc, hours:hrs};
+  store.set('qarar_profile', profile);
+  goItem();
+};
+function goItem(){
+  $('incomeShow').textContent = fmt(profile.income) + ' دج';
+  $('itemName').value = ''; $('price').value = '';
+  show('s-item');
+}
+$('editIncome').onclick = initIncome;
+
+// المنتج
+$('startQ').onclick = () => {
+  const p = +$('price').value;
+  if (!p || p <= 0){ $('price').focus(); return; }
+  item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p};
+  answers = new Array(QS.length).fill(null);
+  cur = 0; renderQ(); show('s-q');
+};
+
+// الأسئلة
+function renderQ(){
+  const q = QS[cur];
+  $('prog').style.width = (cur/QS.length*100) + '%';
+  $('qCount').textContent = 'السؤال ' + (cur+1) + ' من ' + QS.length;
+  $('qItem').textContent = item.name + ' · ' + fmt(item.price) + ' دج';
+  $('qGate').textContent = 'بوابة ' + GATES[q.g].name;
+  $('qText').textContent = q.t;
+  let info = '';
+  if (q.info === 'hours'){
+    info = '<div class="info">يكلّفك <b>' + hoursText() + '</b> من العمل، أي <b>' +
+      (item.price/profile.income*100).toFixed(1).replace('.0','') + '%</b> من دخلك الشهري.</div>';
+  }
+  if (q.info === 'use'){
+    info = '<div class="info">تكلفة الاستعمال الواحد خلال سنة: أسبوعياً <b>' + fmt(item.price/52) +
+      ' دج</b> · شهرياً <b>' + fmt(item.price/12) + ' دج</b> · نادراً <b>' + fmt(item.price/2) + ' دج</b></div>';
+  }
+  $('qInfo').innerHTML = info;
+  const box = $('qOpts'); box.innerHTML = '';
+  q.o.forEach((o,i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt' + (answers[cur]===i ? ' sel' : '');
+    b.textContent = o[0];
+    b.onclick = () => { answers[cur] = i; b.classList.add('sel'); setTimeout(next, 180); };
+    box.appendChild(b);
+  });
+  $('backQ').textContent = cur === 0 ? 'رجوع' : 'السابق';
+}
+function next(){ if (cur < QS.length-1){ cur++; renderQ(); } else result(); }
+$('backQ').onclick = () => { if (cur === 0) show('s-item'); else { cur--; renderQ(); } };
+
+// النتيجة
+function result(){
+  const gs = [0,0,0,0]; let total = 0, knock = '';
+  QS.forEach((q,i) => { const o = q.o[answers[i]]; gs[q.g] += o[1]; total += o[1]; });
+  const ans = id => { const i = QS.findIndex(q=>q.id===id); return QS[i].o[answers[i]]; };
+  if (ans('cash')[2]) knock = 'لا تستطيع دفعه نقداً دون مس الادخار أو الاستدانة.';
+  else if (ans('need')[1] === 0 && ans('search')[1] === 0) knock = 'لا يحل مشكلة حقيقية ولم تكن تبحث عنه.';
+
+  let v;
+  if (knock || total < 50) v = {c:'v-no', ic:'❌', t:'لا تشترِ', k:'no'};
+  else if (total >= 75) v = {c:'v-ok', ic:'✅', t:'اشترِ بثقة', k:'ok'};
+  else v = {c:'v-wait', ic:'⏳', t:'أجّل 30 يوماً', k:'wait'};
+
+  $('verdict').className = 'verdict ' + v.c;
+  $('verdict').innerHTML = '<div class="ic">' + v.ic + '</div><h2>' + v.t + '</h2>' +
+    '<div class="score">' + item.name + ' · ' + total + ' / 100</div>' +
+    (knock ? '<p class="reason" style="margin:10px 0 0">⛔ ' + knock + '</p>' : '');
+
+  const use = ans('use');
+  $('facts').innerHTML =
+    '<div><b>' + hoursText() + '</b><small>من العمل</small></div>' +
+    '<div><b>' + (item.price/profile.income*100).toFixed(1).replace('.0','') + '%</b><small>من الدخل الشهري</small></div>' +
+    '<div><b>' + fmt(item.price/use[3]) + ' دج</b><small>للاستعمال الواحد</small></div>';
+
+  let weakest = 0, weakRatio = 2;
+  $('gates').innerHTML = GATES.map((g,i) => {
+    const r = gs[i]/g.max;
+    if (r < weakRatio){ weakRatio = r; weakest = i; }
+    const col = r >= .75 ? 'var(--ok)' : r >= .5 ? 'var(--wait)' : 'var(--no)';
+    return '<div class="g-row"><div class="top"><span>' + g.name + '</span><b>' + gs[i] + ' / ' + g.max +
+      '</b></div><div class="bar"><i style="width:' + (r*100) + '%;background:' + col + '"></i></div></div>';
+  }).join('');
+  $('tip').textContent = (v.k === 'ok' && weakRatio >= .75)
+    ? 'قرار متوازن في كل البوابات. اشترِ وتابع استعماله كما توقعت.'
+    : TIPS[weakest];
+
+  const hist = store.get('qarar_hist', []);
+  hist.unshift({n:item.name, p:item.price, s:total, k:v.k, d:new Date().toISOString().slice(0,10)});
+  store.set('qarar_hist', hist.slice(0,50));
+  $('prog').style.width = '100%';
+  show('s-res');
+}
+$('again').onclick = goItem;
+
+// السجل
+const TAGS = {ok:['اشترِ','v-ok'], wait:['أجّل','v-wait'], no:['لا تشترِ','v-no']};
+$('histBtn').onclick = () => {
+  const cur = document.querySelector('.screen.on');
+  if (cur && cur.id !== 's-hist') prevScreen = cur.id;
+  const hist = store.get('qarar_hist', []);
+  $('histList').innerHTML = hist.length ? hist.map(h => {
+    let extra = '';
+    if (h.k === 'wait'){
+      const days = 30 - Math.floor((Date.now() - new Date(h.d)) / 864e5);
+      extra = days > 0 ? ' · بقي ' + days + ' يوماً' : ' · حان وقت المراجعة';
+    }
+    return '<li><span><b>' + h.n.replace(/</g,'&lt;') + '</b><br><small style="color:var(--muted)">' + fmt(h.p) + ' دج · ' + h.d + extra +
+      '</small></span><span class="tag ' + TAGS[h.k][1] + '">' + TAGS[h.k][0] + ' ' + h.s + '</span></li>';
+  }).join('') : '<p class="empty">لا توجد قرارات بعد.</p>';
+  show('s-hist');
+};
+$('closeHist').onclick = () => show(profile ? prevScreen : 's-income');
+$('clearHist').onclick = () => { if (confirm('مسح كل السجل؟')){ store.set('qarar_hist', []); $('histBtn').onclick(); } };
+
+// البداية
+if (profile) goItem(); else initIncome();
+</script>
+</body>
+</html>
