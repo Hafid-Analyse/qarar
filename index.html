@@ -87,6 +87,8 @@ input:focus{outline:none;border-color:var(--brand)}
 .hc.k-ok{border-right-color:var(--ok)}.hc.k-wait{border-right-color:var(--wait)}.hc.k-no{border-right-color:var(--no)}
 .hc.dragging{z-index:5;box-shadow:0 14px 30px rgba(30,27,75,.25);transition:box-shadow .2s;opacity:.97}
 .hc .top{display:flex;align-items:center;gap:10px}
+.hc .grip{cursor:grab;touch-action:none;user-select:none;color:var(--muted);font-size:22px;line-height:1;padding:6px 4px;margin:-6px 0;border-radius:8px}
+.hc .grip:active{cursor:grabbing;background:var(--brand-soft)}
 .hc .title{flex:1;min-width:0}
 .hc .title b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hc .title small{color:var(--muted);font-size:13px}
@@ -206,7 +208,7 @@ h3{margin:0 0 12px;font-size:17px}
   <!-- 5. السجل -->
   <section class="screen" id="s-hist">
     <h3 style="margin:0 0 4px">قراراتك السابقة</h3>
-    <p class="reorder-hint" id="reorderHint">مرتبة حسب النقاط، من الأعلى إلى الأدنى</p>
+    <p class="reorder-hint" id="reorderHint">مرتبة حسب النقاط، من الأعلى إلى الأدنى · اسحب ⠿ لتحريك بطاقة مؤقتاً</p>
     <div class="hcards" id="histList"></div>
     <div class="row">
       <button class="btn ghost" id="closeHist" type="button">رجوع</button>
@@ -501,7 +503,7 @@ $('histBtn').onclick = () => {
     const mini = h.net !== undefined
       ? '<span>التكلفة الحقيقية <b>' + fmt(h.net) + ' دج</b></span><span>للاستعمال <b>' + fmt(h.pu) + ' دج</b></span>' : '';
     return '<div class="hc k-' + h.k + '" data-id="' + h.id + '">' +
-      '<div class="top">' +
+      '<div class="top"><span class="grip" aria-label="اسحب لتحريك البطاقة">⠿</span>' +
       '<div class="title"><b>' + esc(h.n) + '</b><small>' + fmt(h.p) + ' دج · ' + iso(h.d) + (h.e ? ' · معدّل' : '') + '</small></div>' +
       '<div class="ring" style="--p:' + h.s + ';--c:' + COLS[h.k] + '"><span>' + iso(h.s) + '</span></div></div>' +
       (mini ? '<div class="mini">' + mini + '</div>' : '<div style="height:12px"></div>') +
@@ -515,6 +517,35 @@ $('histList').onclick = e => {
   const h = store.get('qarar_hist', []).find(x => String(x.id) === b.dataset.id);
   if (h) goItem(h);
 };
+// السحب اليدوي مؤقت: لا يُحفظ، والسجل يُرتَّب حسب النقاط عند كل فتح
+(() => {
+  const list = $('histList');
+  let el = null, startY = 0, pid = null;
+  list.addEventListener('pointerdown', e => {
+    const g = e.target.closest('.grip'); if (!g) return;
+    e.preventDefault();
+    el = g.closest('.hc'); startY = e.clientY; pid = e.pointerId;
+    g.setPointerCapture(pid);
+    el.classList.add('dragging');
+    if (navigator.vibrate) navigator.vibrate(15);
+  });
+  list.addEventListener('pointermove', e => {
+    if (!el || e.pointerId !== pid) return;
+    const before = el.offsetTop;
+    const prev = el.previousElementSibling, nxt = el.nextElementSibling;
+    if (prev && e.clientY < prev.getBoundingClientRect().top + prev.offsetHeight / 2) list.insertBefore(el, prev);
+    else if (nxt && e.clientY > nxt.getBoundingClientRect().top + nxt.offsetHeight / 2) list.insertBefore(nxt, el);
+    startY += el.offsetTop - before;
+    el.style.transform = 'translateY(' + (e.clientY - startY) + 'px)';
+  });
+  const end = e => {
+    if (!el || e.pointerId !== pid) return;
+    el.classList.remove('dragging'); el.style.transform = '';
+    el = null; pid = null;
+  };
+  list.addEventListener('pointerup', end);
+  list.addEventListener('pointercancel', end);
+})();
 $('closeHist').onclick = () => show(profile ? prevScreen : 's-income');
 $('clearHist').onclick = () => { if (confirm('مسح كل السجل؟')){ store.set('qarar_hist', []); $('histBtn').onclick(); } };
 
