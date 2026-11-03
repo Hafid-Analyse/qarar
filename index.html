@@ -208,7 +208,8 @@ h3{margin:0 0 12px;font-size:17px}
   <!-- 5. السجل -->
   <section class="screen" id="s-hist">
     <h3 style="margin:0 0 4px">قراراتك السابقة</h3>
-    <p class="reorder-hint" id="reorderHint">مرتبة حسب النقاط، من الأعلى إلى الأدنى · اسحب ⠿ لتحريك بطاقة مؤقتاً</p>
+    <p class="reorder-hint" id="reorderHint"><span id="orderLabel"></span> · اسحب ⠿ لتغيير الترتيب
+      <button class="link" id="resetOrder" type="button" hidden style="font-size:13px;padding:0 4px">↺ الرجوع لترتيب النقاط</button></p>
     <div class="hcards" id="histList"></div>
     <div class="row">
       <button class="btn ghost" id="closeHist" type="button">رجوع</button>
@@ -493,7 +494,10 @@ $('histBtn').onclick = () => {
   const cur = document.querySelector('.screen.on');
   if (cur && cur.id !== 's-hist') prevScreen = cur.id;
   // الترتيب حسب النقاط من الأعلى إلى الأدنى، وعند التساوي الأحدث أولاً
-  const hist = store.get('qarar_hist', []).sort((a, b) => (b.s - a.s) || (b.id - a.id));
+  const hist = orderedHist();
+  const manual = !!store.get('qarar_order', null);
+  $('orderLabel').textContent = manual ? 'ترتيبك اليدوي' : 'مرتبة حسب النقاط، من الأعلى إلى الأدنى';
+  $('resetOrder').hidden = !manual;
   let fixed = false;
   hist.forEach((h,i) => { if (!h.id){ h.id = Date.now() - i - 1; fixed = true; } });
   if (fixed) store.set('qarar_hist', hist);
@@ -517,7 +521,21 @@ $('histList').onclick = e => {
   const h = store.get('qarar_hist', []).find(x => String(x.id) === b.dataset.id);
   if (h) goItem(h);
 };
-// السحب اليدوي مؤقت: لا يُحفظ، والسجل يُرتَّب حسب النقاط عند كل فتح
+// الترتيب الافتراضي حسب النقاط. بعد السحب يُحفظ الترتيب اليدوي،
+// والقرارات الجديدة تُدرج فيه حسب نقاطها (قبل أول بطاقة أقل منها)
+function orderedHist(){
+  const byScore = (a, b) => (b.s - a.s) || (b.id - a.id);
+  const hist = store.get('qarar_hist', []);
+  const order = store.get('qarar_order', null);
+  if (!order) return hist.sort(byScore);
+  const list = order.map(id => hist.find(h => h.id === id)).filter(Boolean);
+  hist.filter(h => !order.includes(h.id)).sort(byScore).forEach(h => {
+    const at = list.findIndex(x => x.s < h.s);
+    list.splice(at < 0 ? list.length : at, 0, h);
+  });
+  return list;
+}
+$('resetOrder').onclick = () => { store.set('qarar_order', null); try{ localStorage.removeItem('qarar_order'); }catch(e){} $('histBtn').onclick(); toast('↺ رجع الترتيب حسب النقاط'); };
 (() => {
   const list = $('histList');
   let el = null, startY = 0, pid = null;
@@ -541,13 +559,16 @@ $('histList').onclick = e => {
   const end = e => {
     if (!el || e.pointerId !== pid) return;
     el.classList.remove('dragging'); el.style.transform = '';
+    const ids = [...list.querySelectorAll('.hc')].map(c => +c.dataset.id);
+    const before = orderedHist().map(h => h.id);
+    if (ids.join() !== before.join()){ store.set('qarar_order', ids); $('histBtn').onclick(); toast('↕️ تم حفظ الترتيب'); }
     el = null; pid = null;
   };
   list.addEventListener('pointerup', end);
   list.addEventListener('pointercancel', end);
 })();
 $('closeHist').onclick = () => show(profile ? prevScreen : 's-income');
-$('clearHist').onclick = () => { if (confirm('مسح كل السجل؟')){ store.set('qarar_hist', []); $('histBtn').onclick(); } };
+$('clearHist').onclick = () => { if (confirm('مسح كل السجل؟')){ store.set('qarar_hist', []); try{ localStorage.removeItem('qarar_order'); }catch(e){} $('histBtn').onclick(); } };
 
 // البداية
 if (profile) goItem(); else initIncome();
