@@ -131,6 +131,8 @@ input:focus{outline:none;border-color:var(--brand)}
 .facts b{display:block;font-size:18px}
 .facts small{color:var(--muted);font-size:12px}
 .tip{border-right:4px solid var(--brand);padding:4px 12px;margin:0}
+.tip + .tip{margin-top:12px}
+.tip.t-no{border-color:var(--no)}.tip.t-wait{border-color:var(--wait)}.tip.t-ok{border-color:var(--ok)}
 .reason{color:var(--no);font-weight:700}
 h3{margin:0 0 12px;font-size:17px}
 .tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
@@ -197,7 +199,7 @@ h3{margin:0 0 12px;font-size:17px}
     <div class="verdict" id="verdict"></div>
     <div class="card"><h3>الأرقام</h3><div class="facts" id="facts"></div></div>
     <div class="card"><h3>البوابات</h3><div class="gates" id="gates"></div></div>
-    <div class="card"><h3>نصيحة</h3><p class="tip" id="tip"></p></div>
+    <div class="card"><h3>نصائح</h3><div id="tips"></div></div>
     <div class="row">
       <button class="btn" id="again" type="button">قرار جديد</button>
     </div>
@@ -248,30 +250,23 @@ const GATES = [
   {name:'العائد', max:15},
   {name:'الدافع', max:15}
 ];
-const TIPS = [
-  'الحاجة ضعيفة: اسأل نفسك هل يحل مشكلة حقيقية، أم يمكنك الإصلاح أو الاستعارة أو الاستئجار؟',
-  'القدرة ضعيفة: خطّط له في ميزانية الشهر القادم وادّخر ثمنه أولاً بدل اقتطاعه من بند آخر.',
-  'القيمة ضعيفة: قارن بين 3 محلات وفكّر في المستعمل، واحسب التكاليف الخفية قبل القرار.',
-  'العائد ضعيف: هذا مال يخرج ولا يعود. ابحث عن بديل يحفظ قيمته أو يسهل بيعه لاحقاً (المستعمل الجيد، علامة معروفة).',
-  'الدافع ضعيف: انتظر 72 ساعة. إذا كان الدافع تخفيضاً أو مزاجاً فغالباً ستخفّ الرغبة.'
-];
 // gate index, question, options [label, points, knock, factor]; knock=true => "لا تشترِ" فوراً
 const QS = [
-  {g:0, id:'need',   t:'هل يحل مشكلة حقيقية أعيشها الآن؟', o:[['نعم',10],['نوعاً ما',5],['لا',0]]},
+  {g:0, id:'need',   t:'هل يقضي حاجة حقيقية عندي الآن؟', o:[['نعم',10],['نوعاً ما',5],['لا',0]]},
   {g:0, id:'search', t:'لو لم أره اليوم، هل كنت سأبحث عنه؟', o:[['نعم',8],['لا',0]]},
   {g:0, t:'هل أملك شيئاً يؤدي نفس الغرض؟', o:[['لا',7],['بديل جزئي',3],['نعم',0]]},
   {g:1, id:'cash',   t:'هل أدفع ثمنه نقداً دون أن أمس الادخار أو أستدين؟', o:[['نعم',10],['لا',0,true]]},
   {g:1, t:'هل يستحق ساعات العمل التي يكلّفها؟', info:'hours', o:[['نعم',8],['متردد',4],['لا',0]]},
-  {g:1, t:'هل هو مخطط له في ميزانية هذا الشهر؟', o:[['نعم',7],['سأقتطعه من بند آخر',3],['لا',0]]},
+  {g:1, t:'هل هو مخطط له من قبل وتم تدوينه؟', o:[['نعم، مخطط له ومدوّن',7],['مخطط له لكن لم أدوّنه',3],['لا',0]]},
   {g:2, id:'use',    t:'كم مرة سأستعمله؟', o:[['يومياً',8,false,365],['أسبوعياً',8,false,52],['شهرياً',4,false,12],['نادراً',0,false,2]]},
   {g:2, id:'life',   t:'كم سنة تتوقع أن تستعمله؟', info:'use', o:[['أقل من سنة',0,false,0.5],['سنة',0,false,1],['3 سنوات',0,false,3],['5 سنوات أو أكثر',0,false,5]]},
   {g:2, t:'هل له تكاليف خفية (صيانة، اشتراك، وقود، قطع غيار)؟', o:[['لا أو قليلة',6],['متوسطة',3],['كبيرة',0]]},
-  {g:2, t:'هل قارنت الأسعار والبدائل (محلات أخرى، المستعمل)؟', o:[['نعم',6],['لا',0]]},
-  {g:3, id:'nature', t:'ما طبيعة هذا الشراء؟', o:[['أصل يدرّ دخلاً (أداة عمل، للكراء)',6],['يحفظ قيمته (ذهب، أرض)',5],['تنقص قيمته مع الوقت (هاتف، سيارة، أثاث)',2],['يُستهلك فوراً (أكل، خدمة، رحلة)',0]]},
+  {g:2, t:'هل سألت في السوق (ماركت بلايس، واد كنيس…)، وهل يمكن شراء المستعمل؟', o:[['نعم، سألت وقارنت',6],['لا',0]]},
+  {g:3, id:'nature', t:'ما طبيعة هذا الشراء؟', o:[['رأس مال يدرّ دخلاً (سلعة للتجارة، أداة حرفة، للكراء)',6],['يحفظ قيمته (ذهب، أرض، نخيل)',5],['تنقص قيمته مع الوقت (هاتف، سيارة، أثاث)',2],['يُستهلك فوراً (أكل، خدمة، رحلة)',0]]},
   {g:3, t:'لمن نفعه؟', o:[['للأسرة كلها',4],['فيه نفع لغيري (هدية، صدقة، صلة رحم)',4],['لي وحدي',2]]},
   {g:3, id:'resale', type:'resale', t:'بكم تبيعه لاحقاً كأقل تقدير؟'},
   {g:4, t:'ما دافعي للشراء الآن؟', o:[['حاجة فعلية',5],['تخفيض أو عرض',0],['تأثير الآخرين',0],['مزاج (ملل، حزن، مكافأة)',0]]},
-  {g:4, t:'هل سأظل راضياً عنه بعد شهر؟', o:[['نعم',5],['لست متأكداً',2],['لا',0]]},
+  {g:4, id:'consult', t:'هل استشرت واستخرت؟', o:[['نعم',5],['استشرت فقط',3],['لا',0]]},
   {g:4, t:'انتظرت 72 ساعة وما زلت أريده؟', o:[['نعم',5],['لم أنتظر بعد',2],['خفّت الرغبة',0]]}
 ];
 
@@ -326,6 +321,7 @@ function goItem(prefill){
   $('price').value = prefill ? prefill.p : '';
   $('startQ').textContent = prefill ? 'راجع الإجابات' : 'ابدأ الأسئلة';
   item.prev = prefill && prefill.a ? prefill.a : null;
+  item.prevV = prefill ? (prefill.qv || 1) : 2;
   show('s-item');
 }
 $('editIncome').onclick = initIncome;
@@ -334,9 +330,9 @@ $('editIncome').onclick = initIncome;
 $('startQ').onclick = () => {
   const p = +$('price').value;
   if (!p || p <= 0){ $('price').focus(); return; }
-  const prev = item.prev;
-  item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p, prev};
-  answers = prev ? migrate(prev) : new Array(QS.length).fill(null);
+  const prev = item.prev, prevV = item.prevV;
+  item = {name: $('itemName').value.trim() || 'هذا الشيء', price: p, prev, prevV};
+  answers = prev ? migrate(prev, prevV) : new Array(QS.length).fill(null);
   cur = 0; renderQ(); show('s-q');
 };
 
@@ -346,10 +342,13 @@ const useIdx = QS.findIndex(q => q.id === 'use');
 // قرارات 13 سؤالاً: أسئلة بوابة العائد الثلاثة لم تكن موجودة
 const natIdx = QS.findIndex(q => q.id === 'nature');
 const resIdx = QS.findIndex(q => q.id === 'resale');
-function migrate(a){
+// الإصدار 2: سؤال "هل استشرت واستخرت؟" حلّ محل سؤال الرضا بعد شهر
+const conIdx = QS.findIndex(q => q.id === 'consult');
+function migrate(a, ver){
   a = a.slice();
   if (a.length === 12){ if (a[useIdx] !== null) a[useIdx] += 1; a.splice(useIdx + 1, 0, null); }
   if (a.length === 13){ a.splice(natIdx, 0, null, null, null); }
+  if ((ver || 1) < 2) a[conIdx] = null;
   return a;
 }
 // تكلفة كل إجابة: سؤال سعر البيع تُحسب نقاطه من نسبة البيع إلى الثمن
@@ -460,20 +459,24 @@ function result(){
     '<div><b>' + fmt(net) + ' دج</b><small>التكلفة الحقيقية (الثمن − سعر البيع)</small></div>' +
     '<div><b>' + fmt(net/uses) + ' دج</b><small>للاستعمال الواحد</small></div>';
 
-  let weakest = 0, weakRatio = 2;
-  $('gates').innerHTML = GATES.map((g,i) => {
+  // الأعمدة: العائد في الأخير
+  const low = i => gs[i] / GATES[i].max < .5;
+  $('gates').innerHTML = [0,1,2,4,3].map(i => {
+    const g = GATES[i];
     const r = gs[i]/g.max;
-    if (r < weakRatio){ weakRatio = r; weakest = i; }
     const col = r >= .75 ? 'var(--ok)' : r >= .5 ? 'var(--wait)' : 'var(--no)';
     return '<div class="g-row"><div class="top"><span>' + g.name + '</span><b>' + ratio(gs[i], g.max) +
       '</b></div><div class="bar"><i style="width:' + (r*100) + '%;background:' + col + '"></i></div></div>';
   }).join('');
-  $('tip').textContent = (v.k === 'ok' && weakRatio >= .75)
-    ? 'قرار متوازن في كل البوابات. اشترِ وتابع استعماله كما توقعت.'
-    : TIPS[weakest];
+  const tips = [];
+  if (low(0) || low(2)) tips.push(['no', 'الحاجة والقيمة هما الأهم. انخفاضهما يعني: فكّر جدياً في ألا تشتري.']);
+  if (low(1)) tips.push(['wait', 'ركّز على زيادة مداخيلك قبل هذا الشراء.']);
+  if (low(4)) tips.push(['wait', 'استشر غيرك، فربما يشجعونك أو يغيّرون تفكيرك.']);
+  if (!tips.length) tips.push(['ok', 'لا توجد بوابة ضعيفة.']);
+  $('tips').innerHTML = tips.map(t => '<p class="tip t-' + t[0] + '">' + t[1] + '</p>').join('');
 
   const hist = store.get('qarar_hist', []);
-  const rec = {id: editId || Date.now(), n:item.name, p:item.price, s:total, k:v.k, a:answers.slice(),
+  const rec = {id: editId || Date.now(), n:item.name, p:item.price, s:total, k:v.k, a:answers.slice(), qv:2,
     net:net, pu:net/uses, d:new Date().toISOString().slice(0,10)};
   const at = editId ? hist.findIndex(h => h.id === editId) : -1;
   // القرار المعدّل يبقى في مكانه من الترتيب، والجديد يُضاف في الأعلى
